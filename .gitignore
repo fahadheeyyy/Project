@@ -1,0 +1,14 @@
+/.ipynb_checkpoints
+/best_model.keras
+/combined_dataset_kaggle.xlsx
+/depressionJupyter
+/detect_depression.py
+/figures
+/mfccextraction.ipynb
+/mfcc_extract.py
+/mfcc_features_more_detailed.csv
+/predictionUI.html
+/test audio
+/Untitled.ipynb
+/Untitled1.ipynb
+/venv
