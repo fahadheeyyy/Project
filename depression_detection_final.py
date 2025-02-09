@@ -13,29 +13,91 @@ import joblib
 import librosa
 from IPython.display import Audio
 import librosa.display
+import random
 
 # 2. Data Preprocessing
+# def add_noise(X, noise_factor=0.05):
+#     noise = np.random.normal(loc=0.0, scale=noise_factor, size=X.shape)
+#     return X + noise
+
+# def preprocess_data(features, labels):
+#     # Scale features
+#     global scaler
+#     scaler = StandardScaler()
+#     scaled_features = scaler.fit_transform(features)
+    
+#     # Split data
+#     X_train, X_temp, y_train, y_temp = train_test_split(scaled_features, labels, test_size=0.3, random_state=42)
+#     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+    
+#     # Reshape for CNN (add channel dimension)
+#     X_train = add_noise(X_train)
+#     X_train = X_train.reshape(-1, 13, 1)
+#     X_val = X_val.reshape(-1, 13, 1)
+#     X_test = X_test.reshape(-1, 13, 1)
+    
+#     return X_train, X_val, X_test, y_train, y_val, y_test, scaler
+
 def add_noise(X, noise_factor=0.05):
     noise = np.random.normal(loc=0.0, scale=noise_factor, size=X.shape)
     return X + noise
 
+def time_stretch(X, rate=1.2):
+    return librosa.effects.time_stretch(X, rate=rate)
+
+def pitch_shift(X, sr, n_steps=2):
+    return librosa.effects.pitch_shift(X, sr=sr, n_steps=n_steps)
+
+def augment_audio(X, sr):
+    augmentation_choice = random.choice(['noise', 'stretch', 'pitch', 'none'])
+    
+    if augmentation_choice == 'noise':
+        return add_noise(X)
+    elif augmentation_choice == 'stretch':
+        return time_stretch(X, rate=random.uniform(0.8, 1.2))  # Random stretch rate
+    elif augmentation_choice == 'pitch':
+        return pitch_shift(X, sr, n_steps=random.randint(-2, 2))  # Random pitch shift
+    return X  # No augmentation
+
+def pad_or_trim(feature, target_shape):
+    """Pads or trims feature array to match target shape."""
+    if feature.shape[0] < target_shape:  # Pad if too short
+        feature = np.pad(feature, (0, target_shape - feature.shape[0]), mode='constant')
+    elif feature.shape[0] > target_shape:  # Trim if too long
+        feature = feature[:target_shape]
+    return feature
+
 def preprocess_data(features, labels):
-    # Scale features
     global scaler
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features)
-    
-    # Split data
+
+    # Split the dataset
     X_train, X_temp, y_train, y_temp = train_test_split(scaled_features, labels, test_size=0.3, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
-    
-    # Reshape for CNN (add channel dimension)
-    X_train = add_noise(X_train)
-    X_train = X_train.reshape(-1, 13, 1)
-    X_val = X_val.reshape(-1, 13, 1)
-    X_test = X_test.reshape(-1, 13, 1)
-    
-    return X_train, X_val, X_test, y_train, y_val, y_test, scaler
+
+    # Augmentations
+    target_shape = X_train.shape[1]  # Get the feature dimension size
+
+    # 1. Add noise
+    X_train_noisy = X_train + 0.01 * np.random.normal(size=X_train.shape)
+
+    # 2. Time stretch
+    X_train_stretched = np.array([pad_or_trim(librosa.effects.time_stretch(x, rate=1.2), target_shape) for x in X_train])
+
+    # 3. Pitch shift
+    X_train_pitch_shifted = np.array([pad_or_trim(librosa.effects.pitch_shift(x, sr=16000, n_steps=2), target_shape) for x in X_train])
+
+    # Stack augmented features together
+    X_train_augmented = np.vstack([X_train, X_train_noisy, X_train_stretched, X_train_pitch_shifted])
+    y_train_augmented = np.tile(y_train, 4)  # Repeat labels for augmentation
+
+    # Reshape for CNN if required
+    X_train_augmented = X_train_augmented.reshape(-1, target_shape, 1)
+    X_val = X_val.reshape(-1, target_shape, 1)
+    X_test = X_test.reshape(-1, target_shape, 1)
+
+    return X_train_augmented, X_val, X_test, y_train_augmented, y_val, y_test, scaler
 
 # 3. Model Architecture
 def create_model():
@@ -144,7 +206,7 @@ def visualize_results(y_test, y_pred):
     
     plt.tight_layout()
     plt.savefig('model_performance1.png')
-    plt.show()
+    # plt.show()
 
     print("Visualizations created.")
 
@@ -183,6 +245,38 @@ def plot_class_distribution(labels):
     # plt.show()
 
 
+def plot_waveform_comparison(audio_file):
+    y, sr = librosa.load(audio_file)
+
+    # Apply augmentations
+    y_noisy = add_noise(y)
+    y_stretched = librosa.effects.time_stretch(y, rate=1.2)  # Speed up by 20%
+    y_pitch_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=2)  # Increase pitch
+
+    # Plot original waveform
+    plt.figure(figsize=(14, 6))
+    plt.subplot(2, 2, 1)
+    librosa.display.waveshow(y, sr=sr, alpha=0.6)
+    plt.title("Original Audio Waveform of depressed audio")
+
+    # Plot waveform after noise injection
+    plt.subplot(2, 2, 2)
+    librosa.display.waveshow(y_noisy, sr=sr, alpha=0.6)
+    plt.title("After Noise Injection")
+
+    # Plot waveform after time stretching
+    plt.subplot(2, 2, 3)
+    librosa.display.waveshow(y_stretched, sr=sr, alpha=0.6)
+    plt.title("After Time Stretching")
+
+    # Plot waveform after pitch shifting
+    plt.subplot(2, 2, 4)
+    librosa.display.waveshow(y_pitch_shifted, sr=sr, alpha=0.6)
+    plt.title("After Pitch Shifting")
+
+    plt.tight_layout()
+    plt.savefig('waveform_comparison.png')
+    # plt.show()
 
 
 
@@ -262,6 +356,10 @@ def main():
 
     y_pred = evaluate_model(model, X_test, y_test)
     visualize_results(y_test, y_pred)
+    
+    sample_audio_path = os.path.join(base_path, 'depression1', os.listdir(os.path.join(base_path, 'depression1'))[3])
+    plot_waveform_comparison(sample_audio_path)
+
 
     # Save model and scaler
     print("\nSaving model and scaler...")
