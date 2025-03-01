@@ -15,11 +15,6 @@ from IPython.display import Audio
 import librosa.display
 import random
 
-# 2. Data Preprocessing
-# def add_noise(X, noise_factor=0.05):
-#     noise = np.random.normal(loc=0.0, scale=noise_factor, size=X.shape)
-#     return X + noise
-
 def preprocess_data(features, labels):
     # Scale features
     global scaler
@@ -37,35 +32,6 @@ def preprocess_data(features, labels):
     X_test = X_test.reshape(-1, 13, 1)
     
     return X_train, X_val, X_test, y_train, y_val, y_test, scaler
-
-# def add_noise(X, noise_factor=0.05):
-#     noise = np.random.normal(loc=0.0, scale=noise_factor, size=X.shape)
-#     return X + noise
-
-# def time_stretch(X, rate=1.2):
-#     return librosa.effects.time_stretch(X, rate=rate)
-
-# def pitch_shift(X, sr, n_steps=2):
-#     return librosa.effects.pitch_shift(X, sr=sr, n_steps=n_steps)
-
-# def augment_audio(X, sr):
-#     augmentation_choice = random.choice(['noise', 'stretch', 'pitch', 'none'])
-    
-#     if augmentation_choice == 'noise':
-#         return add_noise(X)
-#     elif augmentation_choice == 'stretch':
-#         return time_stretch(X, rate=random.uniform(0.8, 1.2))  # Random stretch rate
-#     elif augmentation_choice == 'pitch':
-#         return pitch_shift(X, sr, n_steps=random.randint(-2, 2))  # Random pitch shift
-#     return X  # No augmentation
-
-# def pad_or_trim(feature, target_shape):
-#     """Pads or trims feature array to match target shape."""
-#     if feature.shape[0] < target_shape:  # Pad if too short
-#         feature = np.pad(feature, (0, target_shape - feature.shape[0]), mode='constant')
-#     elif feature.shape[0] > target_shape:  # Trim if too long
-#         feature = feature[:target_shape]
-#     return feature
 
 # 3. Model Architecture
 def create_model():
@@ -211,45 +177,6 @@ def plot_class_distribution(labels, aug):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.savefig('class distribution ' + aug + '.png')
 
-
-    # plt.show()
-
-
-# def plot_waveform_comparison(audio_file):
-#     y, sr = librosa.load(audio_file)
-
-#     # # Apply augmentations
-#     # y_noisy = add_noise(y)
-#     # y_stretched = librosa.effects.time_stretch(y, rate=1.2)  # Speed up by 20%
-#     # y_pitch_shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=2)  # Increase pitch
-
-#     # Plot original waveform
-#     plt.figure(figsize=(14, 6))
-#     plt.subplot(2, 2, 1)
-#     librosa.display.waveshow(y, sr=sr, alpha=0.6)
-#     plt.title("Original Audio Waveform of depressed audio")
-
-#     # Plot waveform after noise injection
-#     plt.subplot(2, 2, 2)
-#     librosa.display.waveshow(y_noisy, sr=sr, alpha=0.6)
-#     plt.title("After Noise Injection")
-
-#     # Plot waveform after time stretching
-#     plt.subplot(2, 2, 3)
-#     librosa.display.waveshow(y_stretched, sr=sr, alpha=0.6)
-#     plt.title("After Time Stretching")
-
-#     # Plot waveform after pitch shifting
-#     plt.subplot(2, 2, 4)
-#     librosa.display.waveshow(y_pitch_shifted, sr=sr, alpha=0.6)
-#     plt.title("After Pitch Shifting")
-
-#     plt.tight_layout()
-#     plt.savefig('waveform_comparison.png')
-#     # plt.show()
-
-
-
 # 5. Main Execution
 def main():
     # Load combined dataset directly
@@ -317,27 +244,24 @@ def main():
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred.round()))
 
-    # print("\nWaveplot and spectogram:")
-    # base_path = r"D:\projects\clg work\emotion-recognition-using-speech-master\
-    #     dataset-depression"
-    # sample_audio_path1 = os.path.join(base_path, 'depression1', os.listdir
-    #                                   (os.path.join(base_path, 'depression1'))[3])
-    # sample_audio_path2 = os.path.join(base_path, 'normal1', os.listdir
-    #                                   (os.path.join(base_path, 'normal1'))[3])
-    # plot_waveform_and_spectrogram(sample_audio_path1 , "depression")
-
     print("\nclass distribution:")
     plot_class_distribution(labels , "after augmentation")
     plot_class_distribution(labels1 , "before augmentation")
 
-    # plot_waveform_and_spectrogram(sample_audio_path2, "normal")
 
-    # y_pred = evaluate_model(model, X_test, y_test)
-    # visualize_results(y_test, y_pred)
-    
-    # sample_audio_path = os.path.join(base_path, 'depression1', os.listdir
-    #                                  (os.path.join(base_path, 'depression1'))[3])
-    # plot_waveform_comparison(sample_audio_path)
+    report_dict = classification_report(y_test, y_pred.round(), output_dict=True)
+    df_report = pd.DataFrame(report_dict).transpose()
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.axis('tight')
+    ax.axis('off')
+
+    table = ax.table(cellText=df_report.values,
+                 colLabels=df_report.columns,
+                 rowLabels=df_report.index,
+                 loc='center')
+
+    plt.savefig("classification_report.png")
 
 
     # Save model and scaler
