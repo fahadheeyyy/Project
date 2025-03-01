@@ -8,6 +8,11 @@ import sounddevice as sd
 import soundfile as sf
 import os
 from threading import Thread
+import warnings
+
+
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 
 # Load model and scaler
 def load_model_and_scaler():
@@ -30,7 +35,7 @@ def predict_single_sample(features, model, scaler):
     return prediction[0][0]
 
 # Record audio
-def record_audio(duration=8, sr=44100, save_path=None):
+def live_prediction(duration=8, sr=44100, save_path=None):
     print("Recording...")
     recording = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype='float32')
     sd.wait()
@@ -48,8 +53,8 @@ def run_prediction(model, scaler, audio_file=None, recording=None, duration=None
         temp_file_path = save_path if save_path else "temp_recording.wav"
         sf.write(temp_file_path, recording, 22050)
         example_features = extract_features_from_audio(temp_file_path)
-        if not save_path:
-            os.remove(temp_file_path)
+        # if not save_path:
+        #     os.remove(temp_file_path)
 
     probability = predict_single_sample(example_features, model, scaler)
     return probability
@@ -98,7 +103,7 @@ class DepressionDetectionApp:
 
         def record_and_predict():
             try:
-                recording, sr = record_audio(duration)
+                recording, sr = live_prediction(duration)
                 self.update_status("Processing the recording...", color="#0288d1")
                 probability = run_prediction(self.model, self.scaler, recording=recording, duration=duration)
                 self.show_prediction(probability)
@@ -124,6 +129,8 @@ class DepressionDetectionApp:
     def show_prediction(self, probability):
         prediction_text = f"Depression Probability: {probability:.2%}\nPrediction: {'Depression' if probability > 0.5 else 'Normal'}"
         self.result_label.config(text=prediction_text, fg="#d32f2f" if probability > 0.5 else "#388e3c")
+        print(f"depression probability is :{probability}")
+
 
 
 if __name__ == "__main__":
