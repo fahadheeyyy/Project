@@ -199,16 +199,18 @@ def plot_waveform_and_spectrogram(audio_file , type):
     plt.savefig('spectogram of'+type+'.png')
     return Audio(audio_file)
 
-def plot_class_distribution(labels):
+def plot_class_distribution(labels, aug):
     unique, counts = np.unique(labels, return_counts=True)
+    # Map the numerical labels to names
+    label_names = ["normal" if label == 0 else "depressed" for label in unique]
     plt.figure(figsize=(6, 5))
-    sns.barplot(x=unique, y=counts, palette="viridis")
+    sns.barplot(x=label_names, y=counts, palette="viridis")
     plt.title('Class Distribution')
     plt.xlabel('Classes')
     plt.ylabel('Count')
-
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig('class distribution.png')
+    plt.savefig('class distribution ' + aug + '.png')
+
 
     # plt.show()
 
@@ -253,11 +255,14 @@ def main():
     # Load combined dataset directly
     print("Loading dataset...")
     dataset_path = r"D:\projects\clg work\Project\mfcc_features_more_detailed.csv"
+    dataset_path1 = r"D:\projects\clg work\Project\combined_dataset_kaggle_data.csv"
     data = pd.read_csv(dataset_path)
+    data1 = pd.read_csv(dataset_path1)
     
     # Separate features and labels
     features = data.drop('label', axis=1)
     labels = data['label'].values
+    labels1 = data1['label'].values
     
     # Preprocess data
     print("Preprocessing data...")
@@ -322,7 +327,8 @@ def main():
     # plot_waveform_and_spectrogram(sample_audio_path1 , "depression")
 
     print("\nclass distribution:")
-    plot_class_distribution(labels)
+    plot_class_distribution(labels , "after augmentation")
+    plot_class_distribution(labels1 , "before augmentation")
 
     # plot_waveform_and_spectrogram(sample_audio_path2, "normal")
 
