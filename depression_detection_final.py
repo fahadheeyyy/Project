@@ -145,25 +145,25 @@ def visualize_results(y_test, y_pred):
     print("Visualizations created.")
 
 
-def plot_waveform_and_spectrogram(audio_file , type):
-    y, sr = librosa.load(audio_file)
-    plt.figure(figsize=(14, 5))
-    librosa.display.waveshow(y, sr=sr, alpha=0.6)
-    plt.title('Waveform of '+type+' audio')
-    plt.tight_layout()
-    plt.savefig('waveform of'+type+'.png')
-    # plt.show()
+# def plot_waveform_and_spectrogram(audio_file , type):
+#     y, sr = librosa.load(audio_file)
+#     plt.figure(figsize=(14, 5))
+#     librosa.display.waveshow(y, sr=sr, alpha=0.6)
+#     plt.title('Waveform of '+type+' audio')
+#     plt.tight_layout()
+#     plt.savefig('waveform of'+type+'.png')
+#     # plt.show()
     
-    plt.figure(figsize=(14, 5))
-    S = librosa.feature.melspectrogram(y=y, sr=sr)
-    S_dB = librosa.power_to_db(S, ref=np.max)
-    librosa.display.specshow(S_dB, sr=sr, x_axis='time', y_axis='mel')
-    plt.colorbar(format='%+2.0f dB')
-    plt.title('Mel-Frequency Spectrogram of '+type+' audio')
-    # plt.show()
-    plt.tight_layout()
-    plt.savefig('spectogram of'+type+'.png')
-    return Audio(audio_file)
+#     plt.figure(figsize=(14, 5))
+#     S = librosa.feature.melspectrogram(y=y, sr=sr)
+#     S_dB = librosa.power_to_db(S, ref=np.max)
+#     librosa.display.specshow(S_dB, sr=sr, x_axis='time', y_axis='mel')
+#     plt.colorbar(format='%+2.0f dB')
+#     plt.title('Mel-Frequency Spectrogram of '+type+' audio')
+#     # plt.show()
+#     plt.tight_layout()
+#     plt.savefig('spectogram of'+type+'.png')
+#     return Audio(audio_file)
 
 def plot_class_distribution(labels, aug):
     unique, counts = np.unique(labels, return_counts=True)
