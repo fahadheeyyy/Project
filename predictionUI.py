@@ -9,6 +9,7 @@ import soundfile as sf
 import os
 from threading import Thread
 import warnings
+import time
 
 
 warnings.simplefilter(action='ignore', category=UserWarning)
@@ -103,14 +104,23 @@ class DepressionDetectionApp:
 
         def record_and_predict():
             try:
-                recording, sr = live_prediction(duration)
-                self.update_status("Processing the recording...", color="#0288d1")
-                probability = run_prediction(self.model, self.scaler, recording=recording, duration=duration)
-                self.show_prediction(probability)
-                self.update_status("Recording complete!", color="#388e3c")
+               self.update_status("Recording in progress...", color="#f57c00")
+               duration = 8  
+               recording, sr = live_prediction(duration)
+               self.update_status("Processing the recording...", color="#0288d1")
+        
+        # Start timer before prediction
+               start_time = time.time()
+               probability = run_prediction(self.model, self.scaler, recording=recording, duration=duration)
+        # Stop timer after prediction
+               end_time = time.time()
+        
+               prediction_time = end_time - start_time  # Time in seconds
+               self.show_prediction(probability)
+               self.update_status(f"Recording complete! \n Prediction took {prediction_time:.2f} seconds", color="#388e3c")
             except Exception as e:
-                self.update_status("Error during recording!", color="#d32f2f")
-                messagebox.showerror("Error", str(e))
+               self.update_status("Error during recording!", color="#d32f2f")
+               messagebox.showerror("Error", str(e))
 
         Thread(target=record_and_predict).start()
 
@@ -119,9 +129,13 @@ class DepressionDetectionApp:
         if file_path:
             self.update_status("Processing uploaded audio...", color="#0288d1")
             try:
+                start_time = time.time()  # Start timer
                 probability = run_prediction(self.model, self.scaler, audio_file=file_path)
+                end_time = time.time()  # End timer
+
+                prediction_time = end_time - start_time  # Calculate prediction time
                 self.show_prediction(probability)
-                self.update_status("Audio processing complete!", color="#388e3c")
+                self.update_status(f"Audio processing complete! \n Prediction took {prediction_time:.2f} seconds", color="#388e3c")
             except Exception as e:
                 self.update_status("Error during processing!", color="#d32f2f")
                 messagebox.showerror("Error", str(e))

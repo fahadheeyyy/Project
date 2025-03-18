@@ -237,7 +237,11 @@ def main():
     
     # Evaluate model
     print("\nEvaluating model...")
-    y_pred = model.predict(X_test)
+    # y_pred = model.predict(X_test)
+    y_pred = evaluate_model(model, X_test, y_test)
+    visualize_results(y_test, y_pred)
+
+
     plot_confusion_matrix(y_test, y_pred)
     
     # Print classification report
@@ -247,6 +251,8 @@ def main():
     print("\nclass distribution:")
     plot_class_distribution(labels , "after augmentation")
     plot_class_distribution(labels1 , "before augmentation")
+
+
 
 
     report_dict = classification_report(y_test, y_pred.round(), output_dict=True)
