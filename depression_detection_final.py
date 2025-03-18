@@ -13,7 +13,7 @@ import joblib
 import librosa
 from IPython.display import Audio
 import librosa.display
-import random
+# import random
 
 def preprocess_data(features, labels):
     # Scale features
@@ -258,16 +258,12 @@ def main():
     report_dict = classification_report(y_test, y_pred.round(), output_dict=True)
     df_report = pd.DataFrame(report_dict).transpose()
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.axis('tight')
-    ax.axis('off')
+    # fig, ax = plt.subplots(figsize=(8, 6))
+    # ax.axis('tight')
+    # ax.axis('off')
 
-    table = ax.table(cellText=df_report.values,
-                 colLabels=df_report.columns,
-                 rowLabels=df_report.index,
-                 loc='center')
 
-    plt.savefig("classification_report.png")
+    # plt.savefig("classification_report.png")
 
 
     # Save model and scaler
